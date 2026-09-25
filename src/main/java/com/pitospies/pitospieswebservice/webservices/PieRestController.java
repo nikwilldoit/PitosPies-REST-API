@@ -27,9 +27,9 @@ public class PieRestController {
         return pies;
     }
 
-    @PostMapping(value = "/pies", consumes = "application/json")
+    @PostMapping(value="/pies", consumes="application/json")
     @ResponseStatus(HttpStatus.CREATED)
-    public Pie handleRequest3(@RequestBody Pie pie){
+    public Pie handleRequest3(@RequestBody Pie pie) {
         pieRepository.save(pie);
         return pie;
     }

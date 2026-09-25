@@ -1,0 +1,15 @@
+$kind: http-request
+url: http://localhost:8080/api/pies
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \        \"name\": \"Κιμαδόπιτα\",\r
+
+    \        \"price\": 3.5,\r
+
+    \        \"filename\": \"kimadopita.jpg\"\r
+
+    \    }"
+order: 2000
