@@ -10,10 +10,10 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.List;
 
+@Table("pie")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table("pie")
 public class Pie {
     @Id
     private Integer id;
