@@ -14,8 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class Pie {
     @Id
-    private Integer id;
+    private int id;
     private String name;
-    private Double price;
+    private double price;
     private String filename;
 }

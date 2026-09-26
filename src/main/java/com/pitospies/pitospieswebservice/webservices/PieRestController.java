@@ -9,20 +9,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "/api", produces = "application/json")
+@RequestMapping(path="/api", produces="application/json")
 public class PieRestController {
 
     @Autowired
-    PieRepository pieRepository;
+    private PieRepository pieRepository;
 
     @GetMapping("/pie/{id}")
-    public Pie handleRequest(@PathVariable int id){
+    public Pie handleRequest(@PathVariable int id) {
         Pie pie = pieRepository.findPieById(id);
         return pie;
     }
 
     @GetMapping("/pies")
-    public List<Pie> handleRequest2(){
+    public List<Pie> handleRequest2() {
         List<Pie> pies = pieRepository.findAll();
         return pies;
     }
