@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public class GlobalExceptionHandler {
         ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
         Map<String, Object> map =
-                errorAttributes.getErrorAttributes(request, ErrorAttributeOptions.defaults()); //edw pernei mono to timestamp
+                errorAttributes.getErrorAttributes(request, ErrorAttributeOptions.defaults()); //here it gets only the timestamp for the json
         map.put("error", message + ": "+ ex.getMessage());
         map.put("status", status);
         map.put("path", request.getDescription(false));
@@ -46,6 +47,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(map, status);
     }
 
-
+    @ExceptionHandler(value = Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException(NoHandlerFoundException ex, WebRequest request) {
+        System.out.println("error");
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        Map<String, Object> map = httpResponse("Bad Request", ex, request, status);
+        return new ResponseEntity<>(map, status);
+    }
 
 }
