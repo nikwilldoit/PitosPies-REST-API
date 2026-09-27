@@ -8,12 +8,15 @@ import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.boot.webmvc.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException; // Για Spring Boot 3+
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @ControllerAdvice
@@ -24,7 +27,7 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> map =
                 errorAttributes.getErrorAttributes(request, ErrorAttributeOptions.defaults()); //here it gets only the timestamp for the json
-        map.put("error", message + ": " + ex.getMessage());
+        map.put("error", message);
         map.put("status", status.value());
         map.put("path", request.getDescription(false));
 
@@ -38,6 +41,21 @@ public class GlobalExceptionHandler {
         Map<String, Object> map = httpResponse("Bad Request", ex, request, status);
         return new ResponseEntity<>(map, status);
     }
+
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleException(MethodArgumentNotValidException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        List<String> errors = new ArrayList<>();
+        for (var violation: ex.getBindingResult().getAllErrors())
+            errors.add(violation.getDefaultMessage());
+
+        Map<String, Object> map= httpResponse(
+                String.join(", ", errors), ex,request, status);
+
+        return new ResponseEntity<>(map, status);
+    }
+
 
     //Handling Constraint Violations (400 Bad Request - p.x. @NotNull, @Min, @Size validation failures)
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
