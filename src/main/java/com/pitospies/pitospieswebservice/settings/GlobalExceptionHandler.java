@@ -58,7 +58,7 @@ public class GlobalExceptionHandler {
 
 
     //Handling Constraint Violations (400 Bad Request - p.x. @NotNull, @Min, @Size validation failures)
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(ConstraintViolationException ex, WebRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
