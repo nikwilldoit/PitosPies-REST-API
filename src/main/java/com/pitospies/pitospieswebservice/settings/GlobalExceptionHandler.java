@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> map =
                 errorAttributes.getErrorAttributes(request, ErrorAttributeOptions.defaults()); //here it gets only the timestamp for the json
         map.put("error", message + ": " + ex.getMessage());
-        map.put("status", status);
+        map.put("status", status.value());
         map.put("path", request.getDescription(false));
 
         return map;
