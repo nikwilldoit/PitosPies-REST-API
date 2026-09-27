@@ -2,6 +2,7 @@ package com.pitospies.pitospieswebservice.settings;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.boot.webmvc.error.ErrorAttributes;
@@ -35,6 +36,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         Map<String, Object> map = httpResponse("Bad Request", ex, request, status);
+        return new ResponseEntity<>(map, status);
+    }
+
+    //Handling Constraint Violations (400 Bad Request - p.x. @NotNull, @Min, @Size validation failures)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatchException(ConstraintViolationException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        String errorMessage = "";
+        for(var violation: ex.getConstraintViolations()){
+            errorMessage+=violation.getMessage();
+        }
+
+        Map<String, Object> map = httpResponse(errorMessage, ex, request, status);
         return new ResponseEntity<>(map, status);
     }
 
