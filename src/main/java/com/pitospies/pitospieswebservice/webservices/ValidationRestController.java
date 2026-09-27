@@ -3,7 +3,6 @@ package com.pitospies.pitospieswebservice.webservices;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(path="/api", produces="application/json")
 @Validated
-public class ValidationTestController {
+public class ValidationRestController {
 
     @GetMapping("/valid/{id}")
     public ResponseEntity<Map<String, Object>> handleRequest(@Valid @Min(value=5, message= "Error: Id should be at least 5") @PathVariable Integer id){
