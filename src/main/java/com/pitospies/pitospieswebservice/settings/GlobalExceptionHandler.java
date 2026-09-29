@@ -56,7 +56,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(map, status);
     }
 
-
     //Handling Constraint Violations (400 Bad Request - p.x. @NotNull, @Min, @Size validation failures)
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(ConstraintViolationException ex, WebRequest request) {
