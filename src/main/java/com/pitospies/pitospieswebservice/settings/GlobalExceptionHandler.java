@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
     }
 
     //Handling Type Mismatch (400 Bad Request)
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(MethodArgumentTypeMismatchException ex, WebRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
         Map<String, Object> map = httpResponse("Bad Request", ex, request, status);
@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
     }
 
     //Handling Constraint Violations (400 Bad Request - p.x. @NotNull, @Min, @Size validation failures)
-    @ExceptionHandler(ConstraintViolationException.class)
+    @ExceptionHandler(value = ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleTypeMismatchException(ConstraintViolationException ex, WebRequest request) {
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     }
 
     //Handling 404 Not Found (Spring Boot 3+)
-    @ExceptionHandler(NoResourceFoundException.class)
+    @ExceptionHandler(value = NoResourceFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFoundException(NoResourceFoundException ex, WebRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
         Map<String, Object> map = httpResponse("Resource Not Found", ex, request, status);
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     }
 
     //Catch-all General Exception (500 Internal Server Error)
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex, WebRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         Map<String, Object> map = httpResponse("Internal Server Error", ex, request, status);
