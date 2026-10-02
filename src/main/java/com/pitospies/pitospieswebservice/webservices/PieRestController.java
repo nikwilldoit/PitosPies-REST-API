@@ -2,8 +2,12 @@ package com.pitospies.pitospieswebservice.webservices;
 
 import com.pitospies.pitospieswebservice.models.Pie;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
+import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -12,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@Validated
 @RequestMapping(path="/api", produces="application/json")
 public class PieRestController {
 
@@ -22,9 +27,13 @@ public class PieRestController {
     ObjectMapper objectMapper; // jackson. dependency included in spring-web
 
     @GetMapping("/pie/{id}")
-    public Pie handleRequest(@PathVariable int id) {
+    public ResponseEntity<Pie> handleRequest(@Valid @PathVariable int id) {
         Pie pie = pieRepository.findPieById(id);
-        return pie;
+
+        if(pie==null){
+            throw new ResourceNotFoundException("Pie not found!");
+        }
+        return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @GetMapping("/pies")
