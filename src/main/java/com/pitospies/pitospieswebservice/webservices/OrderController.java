@@ -55,6 +55,9 @@ public class OrderController {
         //handle area
         order.setArea(areaRepository.findAreaByOrderId(id));
 
+        //handle pies
+        order.setOrderItems(orderRepository.findOrderItems(order.getId()));
+
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
@@ -62,8 +65,14 @@ public class OrderController {
     public ResponseEntity<List<Order>> handleRequest2() {
         List<Order> orders = (List<Order>) orderRepository.findAll();
 
+        //handle area
         for(Order order : orders){
             order.setArea(areaRepository.findAreaByOrderId(order.getId()));
+        }
+
+        //handle pies
+        for(Order order : orders){
+            order.setOrderItems(orderRepository.findOrderItems(order.getId()));
         }
 
         return new ResponseEntity<>(orders, HttpStatus.OK);
