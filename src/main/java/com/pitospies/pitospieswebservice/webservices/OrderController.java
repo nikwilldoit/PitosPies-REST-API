@@ -41,6 +41,9 @@ public class OrderController {
     private AreaRepository areaRepository;
 
     @Autowired
+    private PieRepository pieRepository;
+
+    @Autowired
     private Validator validator;
 
 
@@ -87,16 +90,12 @@ public class OrderController {
         order.setArea(area);
         orderRepository.updateArea(order.getId(), area.getId());
 
-
-        // handle ingredients
-/*        for (String ingredientName: pie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            if (ingredient==null)
-                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
-
-            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
+        //handle OrderItems
+        for (OrderItem orderItem: order.getOrderItems()) {
+            Pie pie = pieRepository.findPieByName(orderItem.getPie());
+            orderRepository.addOrderItemToOrder(order.getId(), pie.getId(), orderItem.getQuantity());
         }
-*/
+
         return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 
@@ -118,23 +117,12 @@ public class OrderController {
         order.setArea(area);
         orderRepository.updateArea(order.getId(), area.getId());
 
-/*        // handle ingredients
-        // delete ingredients
-        pie.setIngredients(pieRepository.findIngredientsOfPie(id));
-
-        for (String ingredientName: pie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
+        //handle OrderItems
+        for (OrderItem orderItem: order.getOrderItems()) {
+            Pie pie = pieRepository.findPieByName(orderItem.getPie());
+            orderRepository.addOrderItemToOrder(order.getId(), pie.getId(), orderItem.getQuantity());
         }
-        // add new ingredients
-        for (String ingredientName: updatedPie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            if (ingredient==null)
-                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
 
-            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
-        }
-*/
         return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 
@@ -173,39 +161,20 @@ public class OrderController {
             order.setArea(area);
         }
 
-/*        if (updatedPieData.containsKey("awards")) {
-            System.out.println("test");
-            List<Map<String, Object>> awardsData = (List<Map<String, Object>>) updatedPieData.get("awards");
-            System.out.println(awardsData);
-            List<Award> awards = new ArrayList<>();
-            for (Map<String, Object> awardData : awardsData) {
-                Award award = new Award();
-                award.setName((String) awardData.get("name"));
-                // Set any other Award properties here
-                awards.add(award);
+        // handle OrderItems
+        List<OrderItem> orderItems = null;
+        if (updatedOrderData.containsKey("orderItems")) {
+            orderItems = new ArrayList<>();
+            List<Map<String, Object>> newOrderItemsMap = (List<Map<String, Object>>) updatedOrderData.get("orderItems");
+            for (Map<String, Object> newOrderItemMap: newOrderItemsMap ) {
+                orderItems.add(new OrderItem(
+                        (String) newOrderItemMap.get("pie"),
+                        (Integer) newOrderItemMap.get("quantity")
+                ));
             }
-            pie.setAwards(awards);
+            order.setOrderItems(orderItems);
         }
-        if (updatedPieData.containsKey("ingredients")) {
-            // handle ingredients
-            // delete ingredients
-            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
 
-            for (String ingredientName: pie.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
-            }
-            // add new ingredients
-            System.out.println((List<String>) updatedPieData.get("ingredients"));
-            for (String ingredientName: (List<String>) updatedPieData.get("ingredients")) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                if (ingredient==null)
-                    ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
-
-                pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
-            }
-        }
-*/
         //validate the new object
         BindingResult bindingResult = new BeanPropertyBindingResult(order, "order");
         validator.validate(order, bindingResult);
@@ -218,7 +187,13 @@ public class OrderController {
         if(area!=null){
             orderRepository.updateArea(order.getId(), area.getId());
         }
-
+        if (orderItems!=null) {
+            orderRepository.deleteOrderItems(order.getId());
+            for (OrderItem orderItem: order.getOrderItems()) {
+                Pie pie = pieRepository.findPieByName(orderItem.getPie());
+                orderRepository.addOrderItemToOrder(order.getId(), pie.getId(), orderItem.getQuantity());
+            }
+        }
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
@@ -229,15 +204,13 @@ public class OrderController {
         if (order==null)
             return ResponseEntity.noContent().build();
         else {
-/*            // handle ingredients
-            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+            order.setArea(areaRepository.findAreaByOrderId(id));
+            order.setOrderItems(orderRepository.findOrderItems(order.getId()));
 
-            for (String ingredientName: pie.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
-            }
-*/
+            //handle OrderItems
+            orderRepository.deleteOrderItems(id);
             orderRepository.delete(order);
+
             return new ResponseEntity<>(order, HttpStatus.OK);
         }
     }

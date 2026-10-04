@@ -12,8 +12,9 @@ import java.util.List;
 @Repository
 public interface PieRepository extends ListCrudRepository<Pie, Integer> {
     Pie findPieById(int id);
-    Boolean existsPieByName(String name);
+    Pie findPieByName(String name);
 
+    Boolean existsPieByName(String name);
 
 
     @Query("SELECT ingredient.name AS name " +
