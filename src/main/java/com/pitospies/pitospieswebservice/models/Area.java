@@ -1,5 +1,6 @@
 package com.pitospies.pitospieswebservice.models;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,16 +9,11 @@ import org.springframework.data.relational.core.mapping.Table;
 
 @Table("area")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class Area {
-
     @Id
-    Integer id;
-    String description;
-
-    @Override
-    public String toString() {
-        return description;
-    }
+    private int id;
+    @NotBlank(message = "Area description can't be empty")
+    private String description;
 }

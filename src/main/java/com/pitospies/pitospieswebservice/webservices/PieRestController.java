@@ -8,6 +8,10 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Validator;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.type.TypeReference;
@@ -25,7 +29,8 @@ public class PieRestController {
     private PieRepository pieRepository;
 
     @Autowired
-    ObjectMapper objectMapper; // jackson. dependency included in spring-web
+    private Validator validator;
+
 
     @GetMapping("/pie/{id}")
     public ResponseEntity<Pie> handleRequest(@Valid @PathVariable int id) {
@@ -73,37 +78,43 @@ public class PieRestController {
 
     //merikh enhmerwsh
     @PatchMapping(value="/pie/{id}", consumes="application/json")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Pie> handleRequest6(@PathVariable int id, @RequestBody Map<String, Object> updatedPieData) {
-
+    public ResponseEntity<Pie> handleRequest6(@PathVariable Integer id, @RequestBody Map<String, Object> updatedPieData) throws BindException {
         Pie pie = pieRepository.findPieById(id);
-        if(pie==null){
+
+        if (pie==null)
             throw new ResourceNotFoundException("Pie not found!");
-        }
 
-        //kanei update mono oti uparxei ta alla ta afhnei OPWS EINAI
-        if(updatedPieData.containsKey("name")){
+        // update
+        if (updatedPieData.containsKey("name"))
             pie.setName((String) updatedPieData.get("name"));
-        }
-        if(updatedPieData.containsKey("price")){
+        if (updatedPieData.containsKey("price"))
             pie.setPrice((Double) updatedPieData.get("price"));
-        }
-        if(updatedPieData.containsKey("filename")){
+        if (updatedPieData.containsKey("filename"))
             pie.setFilename((String) updatedPieData.get("filename"));
+
+        //validate the new object
+        BindingResult bindingResult = new BeanPropertyBindingResult(pie, "pie");
+        validator.validate(pie, bindingResult);
+        if (bindingResult.hasErrors()) {
+            throw new BindException(bindingResult);
         }
 
-        //save
+        // save
         pieRepository.save(pie);
 
         return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @DeleteMapping(value="/pie/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void handleRequest7(@PathVariable int id) {
+    public ResponseEntity<?>  handleRequest7(@PathVariable int id) {
         Pie pie = pieRepository.findPieById(id);
 
-        //delete
-        pieRepository.delete(pie);
+        if (pie==null)
+            return ResponseEntity.noContent().build();
+        else {
+            pieRepository.delete(pie);
+            System.out.println(pie);
+            return new ResponseEntity<>(pie, HttpStatus.OK);
+        }
     }
 }
