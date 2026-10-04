@@ -16,8 +16,12 @@ import java.util.List;
 @NoArgsConstructor
 public class Pie {
     @Id
-    private Integer id;
+    private int id;
+    @NotBlank(message = "Το όνομα δεν πρέπει να είναι κενό")
     private String name;
-    private Double price;
+    @Min(value = 1, message = "Η τιμή πρέπει να είναι τουλάχιστον 1")
+    @Max(value = 20, message = "Η τιμή πρέπει να είναι το πολύ 20")
+    private double price;
+    @NotBlank(message = "Το όνομα αρχείου δεν πρέπει να είναι κενό")
     private String filename;
 }

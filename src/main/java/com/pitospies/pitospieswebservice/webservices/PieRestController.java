@@ -2,6 +2,7 @@ package com.pitospies.pitospieswebservice.webservices;
 
 import com.pitospies.pitospieswebservice.models.Pie;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
+import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,32 +38,29 @@ public class PieRestController {
     }
 
     @GetMapping("/pies")
-    public List<Pie> handleRequest2() {
+    public ResponseEntity<List<Pie>> handleRequest2() {
         List<Pie> pies = pieRepository.findAll();
-        return pies;
+        return new ResponseEntity<>(pies, HttpStatus.OK);
     }
 
-    //it covers 2 cases: save multiple and single object
     @PostMapping(value = "/pies", consumes = "application/json")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Object handleRequest4(@RequestBody Object object) {
-        if (object instanceof Map) {
-            Pie pie = objectMapper.convertValue(object, Pie.class);
-            pie = pieRepository.save(pie);
-            return pie;
-        } else if (object instanceof List) {
-            List<Pie> pies = objectMapper.convertValue(object, new TypeReference<List<Pie>>() {
-            });
-            pies = pieRepository.saveAll(pies);
-            return pies;
-        }
-        return object;
+    public ResponseEntity<Pie> handleRequest4(@Valid @RequestBody Pie pie) {
+        if (pieRepository.existsPieByName((pie.getName())))
+            throw new ResourceAlreadyExistsException("This pie already exists (same name)");
+
+        pie = pieRepository.save(pie);
+        return new ResponseEntity<>(pie, HttpStatus.CREATED);
     }
 
     //olikh enhmerwsh
     @PutMapping(value="/pie/{id}", consumes="application/json")
     @ResponseStatus(HttpStatus.OK)
-    public Pie handleRequest5(@PathVariable int id, @RequestBody Pie updatedPie) {
+    public ResponseEntity<Pie> handleRequest5(@Valid @PathVariable Integer id, @Valid @RequestBody Pie updatedPie) {
+        Pie pie = pieRepository.findPieById(id);
+
+        if(pie==null){
+            throw new ResourceNotFoundException("Pie not found!");
+        }
 
         //kanei update mono oti uparxei ta alla ta afhnei KENO
         updatedPie.setId(id);
@@ -70,15 +68,18 @@ public class PieRestController {
         //save
         pieRepository.save(updatedPie);
 
-        return updatedPie;
+        return new ResponseEntity<>(updatedPie, HttpStatus.OK);
     }
 
     //merikh enhmerwsh
     @PatchMapping(value="/pie/{id}", consumes="application/json")
     @ResponseStatus(HttpStatus.OK)
-    public Pie handleRequest6(@PathVariable int id, @RequestBody Map<String, Object> updatedPieData) {
+    public ResponseEntity<Pie> handleRequest6(@PathVariable int id, @RequestBody Map<String, Object> updatedPieData) {
 
         Pie pie = pieRepository.findPieById(id);
+        if(pie==null){
+            throw new ResourceNotFoundException("Pie not found!");
+        }
 
         //kanei update mono oti uparxei ta alla ta afhnei OPWS EINAI
         if(updatedPieData.containsKey("name")){
@@ -94,7 +95,7 @@ public class PieRestController {
         //save
         pieRepository.save(pie);
 
-        return pie;
+        return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @DeleteMapping(value="/pie/{id}")
