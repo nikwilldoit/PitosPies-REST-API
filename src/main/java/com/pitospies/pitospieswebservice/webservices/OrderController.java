@@ -206,6 +206,9 @@ public class OrderController {
 
         // save
         orderRepository.save(order);
+        if(area!=null){
+            orderRepository.updateArea(order.getId(), area.getId());
+        }
 
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
