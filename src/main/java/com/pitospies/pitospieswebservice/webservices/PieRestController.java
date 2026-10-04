@@ -1,6 +1,9 @@
 package com.pitospies.pitospieswebservice.webservices;
 
+import com.pitospies.pitospieswebservice.models.Award;
+import com.pitospies.pitospieswebservice.models.Ingredient;
 import com.pitospies.pitospieswebservice.models.Pie;
+import com.pitospies.pitospieswebservice.repositories.IngredientRepository;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +33,9 @@ public class PieRestController {
     private PieRepository pieRepository;
 
     @Autowired
+    private IngredientRepository ingredientRepository;
+
+    @Autowired
     private Validator validator;
 
 
@@ -39,12 +46,20 @@ public class PieRestController {
         if(pie==null){
             throw new ResourceNotFoundException("Pie not found!");
         }
+
+        pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+
         return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @GetMapping("/pies")
     public ResponseEntity<List<Pie>> handleRequest2() {
         List<Pie> pies = pieRepository.findAll();
+
+        for(Pie pie : pies){
+            pie.setIngredients(pieRepository.findIngredientsOfPie(pie.getId()));
+        }
+
         return new ResponseEntity<>(pies, HttpStatus.OK);
     }
 
@@ -54,6 +69,16 @@ public class PieRestController {
             throw new ResourceAlreadyExistsException("This pie already exists (same name)");
 
         pie = pieRepository.save(pie);
+
+        //handle ingredients
+        for (String ingredientName: pie.getIngredients()) {
+            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+            if (ingredient==null)
+                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
+
+            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
+        }
+
         return new ResponseEntity<>(pie, HttpStatus.CREATED);
     }
 
@@ -91,6 +116,19 @@ public class PieRestController {
             pie.setPrice((Double) updatedPieData.get("price"));
         if (updatedPieData.containsKey("filename"))
             pie.setFilename((String) updatedPieData.get("filename"));
+        if (updatedPieData.containsKey("awards")) {
+            System.out.println("test");
+            List<Map<String, Object>> awardsData = (List<Map<String, Object>>) updatedPieData.get("awards");
+            System.out.println(awardsData);
+            List<Award> awards = new ArrayList<>();
+            for (Map<String, Object> awardData : awardsData) {
+                Award award = new Award();
+                award.setName((String) awardData.get("name"));
+                // Set any other Award properties here
+                awards.add(award);
+            }
+            pie.setAwards(awards);
+        }
 
         //validate the new object
         BindingResult bindingResult = new BeanPropertyBindingResult(pie, "pie");
@@ -112,8 +150,15 @@ public class PieRestController {
         if (pie==null)
             return ResponseEntity.noContent().build();
         else {
+            //handle ingredients
+            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+
+            for (String ingredientName: pie.getIngredients()) {
+                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
+            }
+
             pieRepository.delete(pie);
-            System.out.println(pie);
             return new ResponseEntity<>(pie, HttpStatus.OK);
         }
     }

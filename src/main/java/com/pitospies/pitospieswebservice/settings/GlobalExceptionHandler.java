@@ -1,5 +1,7 @@
 package com.pitospies.pitospieswebservice.settings;
 
+import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
+import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
@@ -8,6 +10,7 @@ import org.springframework.boot.webmvc.error.DefaultErrorAttributes;
 import org.springframework.boot.webmvc.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -91,7 +94,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(map, status);
     }
 
-    @ExceptionHandler(value = ResourceNotFoundException.class)
+    @ExceptionHandler(value =   ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleException(ResourceNotFoundException ex, WebRequest request) {
         HttpStatus status = HttpStatus.NOT_FOUND;
 

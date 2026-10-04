@@ -1,5 +1,8 @@
 package com.pitospies.pitospieswebservice.models;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,4 +27,10 @@ public class Pie {
     private double price;
     @NotBlank(message = "Το όνομα αρχείου δεν πρέπει να είναι κενό")
     private String filename;
+
+    @MappedCollection(idColumn = "pie_id", keyColumn = "order")
+    private List<Award> awards;
+
+    @Transient //shmainei oti to spring data jdbc den kanei kati automata to diaxeirizomaste emeis
+    private List<String> ingredients;
 }
