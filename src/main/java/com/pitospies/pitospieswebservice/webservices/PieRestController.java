@@ -84,19 +84,34 @@ public class PieRestController {
 
     //olikh enhmerwsh
     @PutMapping(value="/pie/{id}", consumes="application/json")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Pie> handleRequest5(@Valid @PathVariable Integer id, @Valid @RequestBody Pie updatedPie) {
         Pie pie = pieRepository.findPieById(id);
 
-        if(pie==null){
+        if (pie==null)
             throw new ResourceNotFoundException("Pie not found!");
-        }
 
-        //kanei update mono oti uparxei ta alla ta afhnei KENO
+        // update
         updatedPie.setId(id);
-
-        //save
+        // save
         pieRepository.save(updatedPie);
+
+
+        // handle ingredients
+        // delete ingredients
+        pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+
+        for (String ingredientName: pie.getIngredients()) {
+            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+            pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
+        }
+        // add new ingredients
+        for (String ingredientName: updatedPie.getIngredients()) {
+            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+            if (ingredient==null)
+                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
+
+            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
+        }
 
         return new ResponseEntity<>(updatedPie, HttpStatus.OK);
     }
@@ -128,6 +143,25 @@ public class PieRestController {
                 awards.add(award);
             }
             pie.setAwards(awards);
+        }
+        if (updatedPieData.containsKey("ingredients")) {
+            // handle ingredients
+            // delete ingredients
+            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+
+            for (String ingredientName: pie.getIngredients()) {
+                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
+            }
+            // add new ingredients
+            System.out.println((List<String>) updatedPieData.get("ingredients"));
+            for (String ingredientName: (List<String>) updatedPieData.get("ingredients")) {
+                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
+                if (ingredient==null)
+                    ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
+
+                pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
+            }
         }
 
         //validate the new object
