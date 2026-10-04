@@ -1,7 +1,7 @@
 package com.pitospies.pitospieswebservice.models.validators;
 
-import com.pitos.firstwebservice.models.OrderItem;
-import com.pitos.firstwebservice.repositories.PieRepository;
+import com.pitospies.pitospieswebservice.models.OrderItem;
+import com.pitospies.pitospieswebservice.repositories.PieRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;

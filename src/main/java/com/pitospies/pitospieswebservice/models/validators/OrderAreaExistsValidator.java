@@ -1,7 +1,7 @@
 package com.pitospies.pitospieswebservice.models.validators;
 
-import com.pitos.firstwebservice.models.Area;
-import com.pitos.firstwebservice.repositories.AreaRepository;
+import com.pitospies.pitospieswebservice.models.Area;
+import com.pitospies.pitospieswebservice.repositories.AreaRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;

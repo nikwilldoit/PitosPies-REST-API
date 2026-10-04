@@ -1,6 +1,6 @@
 package com.pitospies.pitospieswebservice.models.validators;
 
-import com.pitos.firstwebservice.models.OrderItem;
+import com.pitospies.pitospieswebservice.models.OrderItem;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
