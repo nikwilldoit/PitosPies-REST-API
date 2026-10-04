@@ -15,6 +15,7 @@ public class OrderItemValuesValidator implements ConstraintValidator<OrderItemVa
     public boolean isValid(List<OrderItem> orderItems, ConstraintValidatorContext constraintValidatorContext) {
         if (orderItems==null)
             return true;  //AtLeastOneItemConstraint will fail, and it's the only message we should have
+                          //kanonika eprepe na epistefoume kai edw false apla kaliptetai apo to AtLeastOneItemConstraint
 
         for (OrderItem orderItem: orderItems) {
             if (orderItem.getQuantity() <= 0 || orderItem.getQuantity() > 100)
