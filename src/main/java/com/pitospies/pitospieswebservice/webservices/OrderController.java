@@ -1,9 +1,7 @@
 package com.pitospies.pitospieswebservice.webservices;
 
-import com.pitospies.pitospieswebservice.models.Award;
-import com.pitospies.pitospieswebservice.models.Ingredient;
-import com.pitospies.pitospieswebservice.models.Order;
-import com.pitospies.pitospieswebservice.models.Pie;
+import com.pitospies.pitospieswebservice.models.*;
+import com.pitospies.pitospieswebservice.repositories.AreaRepository;
 import com.pitospies.pitospieswebservice.repositories.IngredientRepository;
 import com.pitospies.pitospieswebservice.repositories.OrderRepository;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
@@ -40,6 +38,9 @@ public class OrderController {
     private IngredientRepository ingredientRepository;
 
     @Autowired
+    private AreaRepository areaRepository;
+
+    @Autowired
     private Validator validator;
 
 
@@ -51,7 +52,8 @@ public class OrderController {
             throw new ResourceNotFoundException("Order not found!");
         }
 
-        //order.setIngredients(pieRepository.findIngredientsOfPie(id));
+        //handle area
+        order.setArea(areaRepository.findAreaByOrderId(id));
 
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
@@ -60,9 +62,9 @@ public class OrderController {
     public ResponseEntity<List<Order>> handleRequest2() {
         List<Order> orders = (List<Order>) orderRepository.findAll();
 
-//        for(Order order : orders){
-//            order.setIngredients(orderRepository.findIngredientsOfPie(pie.getId()));
-//        }
+        for(Order order : orders){
+            order.setArea(areaRepository.findAreaByOrderId(order.getId()));
+        }
 
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
@@ -70,6 +72,12 @@ public class OrderController {
     @PostMapping(value = "/orders", consumes = "application/json")
     public ResponseEntity<Order> handleRequest4(@Valid @RequestBody Order order) {
         order = orderRepository.save(order);
+
+        //handle area
+        Area area = areaRepository.findAreaByDescription(order.getArea().getDescription());
+        order.setArea(area);
+        orderRepository.updateArea(order.getId(), area.getId());
+
 
         // handle ingredients
 /*        for (String ingredientName: pie.getIngredients()) {
@@ -95,6 +103,11 @@ public class OrderController {
         updatedOrder.setId(id);
         // save
         orderRepository.save(updatedOrder);
+
+        //handle area
+        Area area = areaRepository.findAreaByDescription(order.getArea().getDescription());
+        order.setArea(area);
+        orderRepository.updateArea(order.getId(), area.getId());
 
 /*        // handle ingredients
         // delete ingredients
@@ -141,6 +154,15 @@ public class OrderController {
             order.setPayment((String) updatedOrderData.get("payment"));
         if (updatedOrderData.containsKey("stamp"))
             order.setStamp(LocalDateTime.parse((String) updatedOrderData.get("stamp"), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+
+        //handle area
+        Area area = null;
+        if (updatedOrderData.containsKey("area")) {
+            Map<String, String> areaMap = (Map<String, String>) updatedOrderData.get("area");
+            String areaName = areaMap.get("description");
+            area = areaRepository.findAreaByDescription(areaName);
+            order.setArea(area);
+        }
 
 /*        if (updatedPieData.containsKey("awards")) {
             System.out.println("test");

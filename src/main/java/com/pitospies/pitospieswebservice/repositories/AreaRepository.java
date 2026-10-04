@@ -11,4 +11,5 @@ public interface AreaRepository extends ListCrudRepository<Area, Integer> {
     Area findAreaById(int id);
     Boolean existsAreaByDescription(String description);
     Area findAreaByDescription(String description);
+    Area findAreaByOrderId(int id);
 }
