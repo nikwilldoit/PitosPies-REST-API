@@ -91,6 +91,13 @@ public class PieRestController {
         return (List<Pie>) piePagingRepository.findAll(sort);
     }
 
+    @GetMapping(value="/pies", params = { "sortByField1", "sortByField2" })
+    public List<Pie> findAllBySort2(@RequestParam("sortByField1") final String sortByField1,
+                                    @RequestParam("sortByField2") final String sortByField2) {
+        Sort sort = Sort.by(Sort.Order.asc(sortByField1), Sort.Order.asc(sortByField2));
+        return (List<Pie>) piePagingRepository.findAll(sort);
+    }
+
     @PostMapping(value = "/pies", consumes = "application/json")
     public ResponseEntity<Pie> handleRequest4(@Valid @RequestBody Pie pie) {
         if (pieRepository.existsPieByName((pie.getName())))
