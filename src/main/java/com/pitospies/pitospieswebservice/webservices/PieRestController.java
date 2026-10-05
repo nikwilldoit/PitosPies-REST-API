@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -80,6 +81,15 @@ public class PieRestController {
             return new ArrayList<Pie>();
     }
 
+    @GetMapping(value="/pies", params = { "sortBy", "sortOrder" })
+    public List<Pie> findAllBySort(@RequestParam("sortBy") final String sortBy,
+                                   @RequestParam("sortOrder") final String sortOrder) {
+        //opou Sort.Direction.fromString(sortOrder) {sortOrder = "asc" or "desc}
+        //mporoume kai kateuthian Sort.Direction.ASC || Sort.Direction.DESC
+        //to sortBy einai me vash ti theloume na kanoume sort p.x {id, name, ktlp}
+        Sort sort = Sort.by(Sort.Direction.fromString(sortOrder), sortBy);
+        return (List<Pie>) piePagingRepository.findAll(sort);
+    }
 
     @PostMapping(value = "/pies", consumes = "application/json")
     public ResponseEntity<Pie> handleRequest4(@Valid @RequestBody Pie pie) {
