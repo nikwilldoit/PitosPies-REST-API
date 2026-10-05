@@ -4,11 +4,14 @@ import com.pitospies.pitospieswebservice.models.Award;
 import com.pitospies.pitospieswebservice.models.Ingredient;
 import com.pitospies.pitospieswebservice.models.Pie;
 import com.pitospies.pitospieswebservice.repositories.IngredientRepository;
+import com.pitospies.pitospieswebservice.repositories.PiePagingRepository;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -34,6 +37,9 @@ public class PieRestController {
 
     @Autowired
     private IngredientRepository ingredientRepository;
+
+    @Autowired
+    private PiePagingRepository piePagingRepository;
 
     @Autowired
     private Validator validator;
@@ -62,6 +68,18 @@ public class PieRestController {
 
         return new ResponseEntity<>(pies, HttpStatus.OK);
     }
+
+    @GetMapping(value="/pies", params = { "page", "size" })
+    public List<Pie> findAllByPage(@RequestParam("page") int page,
+                                   @RequestParam("size") int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<Pie> result = piePagingRepository.findAll(pageable);
+        if (!result.isEmpty())
+            return result.getContent();
+        else
+            return new ArrayList<Pie>();
+    }
+
 
     @PostMapping(value = "/pies", consumes = "application/json")
     public ResponseEntity<Pie> handleRequest4(@Valid @RequestBody Pie pie) {
