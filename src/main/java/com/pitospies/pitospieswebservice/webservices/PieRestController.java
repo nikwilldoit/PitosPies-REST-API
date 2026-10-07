@@ -6,6 +6,7 @@ import com.pitospies.pitospieswebservice.models.Pie;
 import com.pitospies.pitospieswebservice.repositories.IngredientRepository;
 import com.pitospies.pitospieswebservice.repositories.PiePagingRepository;
 import com.pitospies.pitospieswebservice.repositories.PieRepository;
+import com.pitospies.pitospieswebservice.services.PieService;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
@@ -45,10 +46,13 @@ public class PieRestController {
     @Autowired
     private Validator validator;
 
+    @Autowired
+    private PieService pieService;
+
 
     @GetMapping("/pie/{id}")
     public ResponseEntity<Pie> handleRequest(@Valid @PathVariable int id) {
-        Pie pie = pieRepository.findPieById(id);
+        Pie pie = pieService.getPieById(id);
 
         if(pie==null){
             throw new ResourceNotFoundException("Pie not found!");
