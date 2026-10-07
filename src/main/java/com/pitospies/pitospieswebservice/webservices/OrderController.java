@@ -1,14 +1,14 @@
 package com.pitospies.pitospieswebservice.webservices;
 
 import com.pitospies.pitospieswebservice.models.*;
-import com.pitospies.pitospieswebservice.repositories.AreaRepository;
-import com.pitospies.pitospieswebservice.repositories.IngredientRepository;
-import com.pitospies.pitospieswebservice.repositories.OrderRepository;
-import com.pitospies.pitospieswebservice.repositories.PieRepository;
+import com.pitospies.pitospieswebservice.repositories.*;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -43,6 +43,8 @@ public class OrderController {
     @Autowired
     private PieRepository pieRepository;
 
+    @Autowired
+    private OrderPagingRepository orderPagingRepository;
     @Autowired
     private Validator validator;
 
@@ -79,6 +81,33 @@ public class OrderController {
         }
 
         return new ResponseEntity<>(orders, HttpStatus.OK);
+    }
+
+    //paging kai sorting sugxronos
+    @GetMapping(value="/orders", params = { "page", "size", "sortBy", "sortOrder" })
+    public List<Order> findAllBySort(@RequestParam("page") int page,
+                                   @RequestParam("size") int size,
+                                   @RequestParam("sortBy") String sortBy,
+                                   @RequestParam("sortOrder") String sortOrder) {
+
+        List<Order> orders = (List<Order>) orderRepository.findAll();
+
+        //handle area
+        for(Order order : orders){
+            order.setArea(areaRepository.findAreaByOrderId(order.getId()));
+        }
+
+        //handle pies
+        for(Order order : orders){
+            order.setOrderItems(orderRepository.findOrderItems(order.getId()));
+        }
+
+        PageRequest pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortOrder), sortBy);
+        Page<Order> result = orderPagingRepository.findAll(pageable);
+        if (!result.isEmpty())
+            return result.getContent();
+        else
+            return new ArrayList<Order>();
     }
 
     @PostMapping(value = "/orders", consumes = "application/json")
