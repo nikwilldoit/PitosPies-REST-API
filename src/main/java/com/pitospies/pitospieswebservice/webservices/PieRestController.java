@@ -30,7 +30,7 @@ import java.util.Map;
 
 @RestController
 @Validated
-@RequestMapping(path="/api", produces="application/json")
+@RequestMapping(path="/api", produces={"application/json", "application/xml"})
 public class PieRestController {
 
     @Autowired
