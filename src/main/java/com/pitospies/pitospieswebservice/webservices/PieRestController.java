@@ -120,89 +120,36 @@ public class PieRestController {
     //olikh enhmerwsh
     @PutMapping(value="/pie/{id}", consumes="application/json")
     public ResponseEntity<Pie> handleRequest5(@Valid @PathVariable Integer id, @Valid @RequestBody Pie updatedPie) {
+        Pie pie = pieService.getPieEntity(id);
 
-        updatedPie = pieService.updatePie(id, updatedPie);
+        if (pie==null)
+            throw new ResourceNotFoundException("Pie not found!");
 
-        return new ResponseEntity<>(updatedPie, HttpStatus.OK);
+        pie = pieService.putPie(pie, updatedPie);
+
+        return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     //merikh enhmerwsh
     @PatchMapping(value="/pie/{id}", consumes="application/json")
     public ResponseEntity<Pie> handleRequest6(@PathVariable Integer id, @RequestBody Map<String, Object> updatedPieData) throws BindException {
-        Pie pie = pieRepository.findPieById(id);
+        Pie pie = pieService.getPieEntity(id);
 
         if (pie==null)
             throw new ResourceNotFoundException("Pie not found!");
 
-        // update
-        if (updatedPieData.containsKey("name"))
-            pie.setName((String) updatedPieData.get("name"));
-        if (updatedPieData.containsKey("price"))
-            pie.setPrice((Double) updatedPieData.get("price"));
-        if (updatedPieData.containsKey("filename"))
-            pie.setFilename((String) updatedPieData.get("filename"));
-        if (updatedPieData.containsKey("awards")) {
-            System.out.println("test");
-            List<Map<String, Object>> awardsData = (List<Map<String, Object>>) updatedPieData.get("awards");
-            System.out.println(awardsData);
-            List<Award> awards = new ArrayList<>();
-            for (Map<String, Object> awardData : awardsData) {
-                Award award = new Award();
-                award.setName((String) awardData.get("name"));
-                // Set any other Award properties here
-                awards.add(award);
-            }
-            pie.setAwards(awards);
-        }
-        if (updatedPieData.containsKey("ingredients")) {
-            // handle ingredients
-            // delete ingredients
-            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
-
-            for (String ingredientName: pie.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
-            }
-            // add new ingredients
-            System.out.println((List<String>) updatedPieData.get("ingredients"));
-            for (String ingredientName: (List<String>) updatedPieData.get("ingredients")) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                if (ingredient==null)
-                    ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
-
-                pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
-            }
-        }
-
-        //validate the new object
-        BindingResult bindingResult = new BeanPropertyBindingResult(pie, "pie");
-        validator.validate(pie, bindingResult);
-        if (bindingResult.hasErrors()) {
-            throw new BindException(bindingResult);
-        }
-
-        // save
-        pieRepository.save(pie);
+        pie = pieService.patchPie(pie, updatedPieData);
 
         return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @DeleteMapping(value="/pie/{id}")
     public ResponseEntity<?>  handleRequest7(@PathVariable int id) {
-        Pie pie = pieRepository.findPieById(id);
+        Pie pie = pieService.deletePie(id);
 
         if (pie==null)
             return ResponseEntity.noContent().build();
         else {
-            //handle ingredients
-            pie.setIngredients(pieRepository.findIngredientsOfPie(id));
-
-            for (String ingredientName: pie.getIngredients()) {
-                Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-                pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
-            }
-
-            pieRepository.delete(pie);
             return new ResponseEntity<>(pie, HttpStatus.OK);
         }
     }
