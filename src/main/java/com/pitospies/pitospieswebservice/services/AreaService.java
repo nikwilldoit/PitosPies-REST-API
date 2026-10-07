@@ -12,6 +12,7 @@ public class AreaService {
     @Autowired
     private AreaRepository areaRepository;
 
+    //prosthiki condition gia ta periexomena pou epistefei h cache: condition = "#id>2" an thelw na swzei mono id's>2
     @Cacheable(value="area-cache", key="'area-' + #id", sync=true) //sync=true ena ena thread epejergazetai cache
     public Area getAreaById(int id) {
 

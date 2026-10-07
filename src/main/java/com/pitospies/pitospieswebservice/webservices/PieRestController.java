@@ -52,24 +52,14 @@ public class PieRestController {
 
     @GetMapping("/pie/{id}")
     public ResponseEntity<Pie> handleRequest(@Valid @PathVariable int id) {
-        Pie pie = pieService.getPieById(id);
-
-        if(pie==null){
-            throw new ResourceNotFoundException("Pie not found!");
-        }
-
-        pie.setIngredients(pieRepository.findIngredientsOfPie(id));
+        Pie pie = pieService.getPieEntity(id);
 
         return new ResponseEntity<>(pie, HttpStatus.OK);
     }
 
     @GetMapping("/pies")
     public ResponseEntity<List<Pie>> handleRequest2() {
-        List<Pie> pies = pieRepository.findAll();
-
-        for(Pie pie : pies){
-            pie.setIngredients(pieRepository.findIngredientsOfPie(pie.getId()));
-        }
+        List<Pie> pies = pieService.getAllPieEntities();
 
         return new ResponseEntity<>(pies, HttpStatus.OK);
     }
@@ -119,19 +109,10 @@ public class PieRestController {
 
     @PostMapping(value = "/pies", consumes = "application/json")
     public ResponseEntity<Pie> handleRequest4(@Valid @RequestBody Pie pie) {
-        if (pieRepository.existsPieByName((pie.getName())))
+        if (pieService.existsPieByName(pie.getName()))
             throw new ResourceAlreadyExistsException("This pie already exists (same name)");
 
-        pie = pieRepository.save(pie);
-
-        //handle ingredients
-        for (String ingredientName: pie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            if (ingredient==null)
-                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
-
-            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
-        }
+        pie = pieService.savePie(pie);
 
         return new ResponseEntity<>(pie, HttpStatus.CREATED);
     }
