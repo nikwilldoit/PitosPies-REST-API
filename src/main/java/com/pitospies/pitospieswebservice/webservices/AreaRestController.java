@@ -39,17 +39,14 @@ public class AreaRestController {
 
     @GetMapping("/area/{id}")
     public ResponseEntity<Area> handleRequest(@Valid @PathVariable int id) {
-        Area area = areaService.getAreaById(id);
+        Area area = areaService.getAreaEntity(id);
 
-        if(area==null){
-            throw new ResourceNotFoundException("Area not found!");
-        }
         return new ResponseEntity<>(area, HttpStatus.OK);
     }
 
     @GetMapping("/areas")
     public ResponseEntity<List<Area>> handleRequest2() {
-        List<Area> areas = areaRepository.findAll();
+        List<Area> areas = areaService.getAllAreaEntities();
         return new ResponseEntity<>(areas, HttpStatus.OK);
     }
 
@@ -57,10 +54,10 @@ public class AreaRestController {
     @PostMapping(value = "/areas", consumes = "application/json")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Area> handleRequest4(@Valid @RequestBody Area area) {
-        if (areaRepository.existsAreaByDescription((area.getDescription())))
+        if (areaService.existsAreaByDescription((area.getDescription())))
             throw new ResourceAlreadyExistsException("This area already exists (same name)");
 
-        area = areaRepository.save(area);
+        area = areaService.saveArea(area);
         return new ResponseEntity<>(area, HttpStatus.CREATED);
     }
 
@@ -69,44 +66,26 @@ public class AreaRestController {
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Area> handleRequest5(@Valid @PathVariable int id, @RequestBody Area updatedArea) {
 
-        Area area = areaRepository.findAreaById(id);
+        Area area = areaService.getAreaEntity(id);
 
         if(area==null){
             throw new ResourceNotFoundException("Area not found!");
         }
 
-        //kanei update mono oti uparxei ta alla ta afhnei KENO
-        updatedArea.setId(id);
-
-        //save
-        areaRepository.save(updatedArea);
-
-        return new ResponseEntity<>(updatedArea, HttpStatus.OK);
+        area = areaService.putArea(area, updatedArea);
+        return new ResponseEntity<>(area, HttpStatus.OK);
     }
 
     //merikh enhmerwsh
     @PatchMapping(value="/area/{id}", consumes="application/json")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Area> handleRequest6(@PathVariable int id, @RequestBody Map<String, Object> updatedAreaData) throws BindException {
+        Area area = areaService.getAreaEntity(id);
 
-        Area area = areaRepository.findAreaById(id);
         if (area==null)
             throw new ResourceNotFoundException("Area not found!");
 
-        //kanei update mono oti uparxei ta alla ta afhnei OPWS EINAI
-        if(updatedAreaData.containsKey("description")){
-            area.setDescription((String) updatedAreaData.get("description"));
-        }
-
-        //validate the new object
-        BindingResult bindingResult = new BeanPropertyBindingResult(area, "area");
-        validator.validate(area, bindingResult);
-        if (bindingResult.hasErrors()) {
-            throw new BindException(bindingResult);
-        }
-
-        //save
-        areaRepository.save(area);
+        area = areaService.patchArea(area, updatedAreaData);
 
         return new ResponseEntity<>(area, HttpStatus.OK);
     }
@@ -114,15 +93,10 @@ public class AreaRestController {
     @DeleteMapping(value="/area/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> handleRequest7(@PathVariable int id) {
-        Area area = areaRepository.findAreaById(id);
-
+        Area area = areaService.deleteArea(id);
         if (area==null)
             return ResponseEntity.noContent().build();
-        else {
-            //delete
-            areaRepository.delete(area);
-            System.out.println(area);
+        else
             return new ResponseEntity<>(area, HttpStatus.OK);
-        }
     }
 }
