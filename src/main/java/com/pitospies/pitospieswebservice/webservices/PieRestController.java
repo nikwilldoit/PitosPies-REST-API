@@ -91,11 +91,26 @@ public class PieRestController {
         return (List<Pie>) piePagingRepository.findAll(sort);
     }
 
+    //tajinomhsh epi pollwn pediwn {"sortByField1", "sortByField2"}
     @GetMapping(value="/pies", params = { "sortByField1", "sortByField2" })
     public List<Pie> findAllBySort2(@RequestParam("sortByField1") final String sortByField1,
                                     @RequestParam("sortByField2") final String sortByField2) {
         Sort sort = Sort.by(Sort.Order.asc(sortByField1), Sort.Order.asc(sortByField2));
         return (List<Pie>) piePagingRepository.findAll(sort);
+    }
+
+    //paging kai sorting sugxronos
+    @GetMapping(value="/pies", params = { "page", "size", "sortBy", "sortOrder" })
+    public List<Pie> findAllBySort(@RequestParam("page") int page,
+                                   @RequestParam("size") int size,
+                                   @RequestParam("sortBy") String sortBy,
+                                   @RequestParam("sortOrder") String sortOrder) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.Direction.fromString(sortOrder), sortBy);
+        Page<Pie> result = piePagingRepository.findAll(pageable);
+        if (!result.isEmpty())
+            return result.getContent();
+        else
+            return new ArrayList<Pie>();
     }
 
     @PostMapping(value = "/pies", consumes = "application/json")
