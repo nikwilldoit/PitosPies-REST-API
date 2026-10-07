@@ -97,6 +97,12 @@ public class PieService {
         return check;
     }
 
+    public Pie getPieByName(String name) {
+        Pie pie = pieRepository.findPieByName(name);
+
+        return pie;
+    }
+
     public void deletePieIngredients(Pie pie) {
         List<String> ingredients = getPieIngredients(pie.getId());
         pie.setIngredients(ingredients);
