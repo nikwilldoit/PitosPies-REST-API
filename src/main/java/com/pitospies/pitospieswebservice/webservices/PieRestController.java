@@ -139,33 +139,8 @@ public class PieRestController {
     //olikh enhmerwsh
     @PutMapping(value="/pie/{id}", consumes="application/json")
     public ResponseEntity<Pie> handleRequest5(@Valid @PathVariable Integer id, @Valid @RequestBody Pie updatedPie) {
-        Pie pie = pieRepository.findPieById(id);
 
-        if (pie==null)
-            throw new ResourceNotFoundException("Pie not found!");
-
-        // update
-        updatedPie.setId(id);
-        // save
-        pieRepository.save(updatedPie);
-
-
-        // handle ingredients
-        // delete ingredients
-        pie.setIngredients(pieRepository.findIngredientsOfPie(id));
-
-        for (String ingredientName: pie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            pieRepository.removeIngredientFromPie(pie.getId(), ingredient.getId());
-        }
-        // add new ingredients
-        for (String ingredientName: updatedPie.getIngredients()) {
-            Ingredient ingredient = ingredientRepository.findIngredientByName(ingredientName);
-            if (ingredient==null)
-                ingredient = ingredientRepository.save(new Ingredient(null, ingredientName));
-
-            pieRepository.addIngredientToPie(pie.getId(), ingredient.getId());
-        }
+        updatedPie = pieService.updatePie(id, updatedPie);
 
         return new ResponseEntity<>(updatedPie, HttpStatus.OK);
     }

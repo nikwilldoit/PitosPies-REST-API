@@ -19,7 +19,7 @@ public class PieService {
     @Autowired
     private IngredientRepository ingredientRepository;
 
-    @Cacheable(value="my-cache", key="'pie-' + #id", sync=true)
+    @Cacheable(value="my-cache", key="'pie-' + #id", sync=true) //sync=true ena ena thread epejergazetai cache
     public Pie getPieById(int id) {
         Pie pie = pieRepository.findPieById(id);
 
