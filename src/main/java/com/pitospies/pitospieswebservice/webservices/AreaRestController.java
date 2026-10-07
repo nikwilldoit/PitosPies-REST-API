@@ -2,6 +2,7 @@ package com.pitospies.pitospieswebservice.webservices;
 
 import com.pitospies.pitospieswebservice.models.Area;
 import com.pitospies.pitospieswebservice.repositories.AreaRepository;
+import com.pitospies.pitospieswebservice.services.AreaService;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceAlreadyExistsException;
 import com.pitospies.pitospieswebservice.settings.exceptions.ResourceNotFoundException;
 import jakarta.validation.Valid;
@@ -33,9 +34,12 @@ public class AreaRestController {
     @Autowired
     ObjectMapper objectMapper; // jackson. dependency included in spring-web
 
+    @Autowired
+    private AreaService areaService;
+
     @GetMapping("/area/{id}")
     public ResponseEntity<Area> handleRequest(@Valid @PathVariable int id) {
-        Area area = areaRepository.findAreaById(id);
+        Area area = areaService.getAreaById(id);
 
         if(area==null){
             throw new ResourceNotFoundException("Area not found!");
