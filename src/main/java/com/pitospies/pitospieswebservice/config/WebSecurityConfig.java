@@ -1,5 +1,6 @@
 package com.pitospies.pitospieswebservice.config;
 
+import com.pitospies.pitospieswebservice.services.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,8 +33,8 @@ public class WebSecurityConfig {
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/pie/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/area/**").hasAuthority("ROLE_USER")
+                        .requestMatchers("/api/pie/**").hasAuthority("ROLE_ADMIN") //ta vlepei mono admin
+                        .requestMatchers("/api/area/**").hasAuthority("ROLE_USER") //ta vlepei mono user
                         .anyRequest().permitAll()
                 )
                 .httpBasic(Customizer.withDefaults())
