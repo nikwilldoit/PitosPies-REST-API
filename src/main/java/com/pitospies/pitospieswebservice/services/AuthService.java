@@ -52,7 +52,7 @@ public class AuthService implements UserDetailsService {
     }
 
     public void registerUser(User user) {
-        Role role = roleRepository.findRoleByName("user");
+        Role role = roleRepository.findRoleByName("USER");
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
         userRepository.saveWithRole(user, role);

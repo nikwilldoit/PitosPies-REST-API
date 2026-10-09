@@ -26,4 +26,11 @@ public class User {
 
     @Transient
     private List<String> roles;
+
+    public User(Integer id, String username, String password, List<String> roles) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.roles = roles;
+    }
 }
