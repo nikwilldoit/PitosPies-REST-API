@@ -1,144 +1,204 @@
-# **PitosPiesWebService**
+# PitosPies-REST-API
 
-**PitosPiesWebService** is a high-performance **RESTful Web Service API** built with **Spring Boot** for managing pie ordering, product catalog operations, delivery area mappings, and customer transactions. 
+PitosPies-REST-API is the dedicated Spring Boot RESTful Web Service backend for the [PitosPies](https://github.com/nikwilldoit/PitosPies) ecosystem. It handles catalog management, order processing, delivery area administration, user authentication, and system caching through structured JSON and XML endpoints.
 
-It is designed as a standalone, backend-only microservice that powers front-end clients, mobile apps, or single-page applications (SPAs).
-
-> 🔗 **Related Project:** For the Web Application interface (Thymeleaf MVC frontend), visit [PitosPies Web Application](https://github.com/nikwilldoit/PitosPies).
+This repository serves as the standalone backend API service for the PitosPies system. The corresponding Spring Boot Web application (Thymeleaf MVC) is available at [PitosPies Repository](https://github.com/nikwilldoit/PitosPies).
 
 ---
 
-## 🏗️ Technical Highlights & Capabilities
+## Architectural Highlights
 
-* **RESTful Architecture:** Clear separation of concerns with `@RestController` components serving JSON/XML payloads.
-* **Full CRUD Operations:** Support for resources (`Pie`, `Order`, `Area`).
-* **PUT vs. PATCH Precision:**
-  * **`PUT`:** Handles complete entity replacements mapped to `@Valid @RequestBody`.
-  * **`PATCH`:** Handles partial entity updates using dynamic `Map<String, Object>` payloads and programmatic Bean Validation (`BeanPropertyBindingResult` + `Validator`) to avoid unintended null overwrites.
-* **Advanced Pagination & Sorting:** Built-in `PagingAndSortingRepository` support for multi-field sorting and client-defined page sizes (`page`, `size`, `sortBy`, `sortOrder`).
-* **In-Memory Caching (Spring Cache):** Performance optimization using `ConcurrentMapCacheManager` with annotations (`@Cacheable`, `@CacheEvict`, `@Caching`).
-* **Cache Introspection:** Dedicated endpoint to inspect live memory cache state.
-* **Spring Data JDBC Persistence:** Clean SQL-based data access layer featuring derived queries, custom `@Query` annotations with SQL JOINs, and custom type converters.
-* **Global Exception Handling:** `@ControllerAdvice` providing standardized REST error responses (`400 Bad Request`, `401 Unauthorized`, `404 Not Found`, `409 Conflict`, `500 Internal Error`).
-* **Role-Based Security:** Spring Security integration with `HTTP Basic Auth` and BCrypt password encryption.
+* Controller Layer: Dedicated REST Controllers (`@RestController`) producing JSON/XML responses.
+* Service Layer: Encapsulated business logic, relational mappings, and programmatic Bean Validation (`BeanPropertyBindingResult` + `Validator`).
+* Data Access Layer: Spring Data JDBC persistence layer using derived queries, custom `@Query` annotations, and custom converters (`BooleanToIntegerConverter`, `IntegerToBooleanConverter`).
+* Caching Engine: In-memory concurrent map caching (`@Cacheable`, `@CacheEvict`, `@Caching`) with a dedicated REST endpoint for real-time cache inspection.
+* Centralized Exception Handling: `@ControllerAdvice` providing standardized JSON error structures.
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Category | Technology |
-| :--- | :--- |
-| **Language** | Java 17+ / Java 25 |
-| **Framework** | Spring Boot 3.x / 4.x (Spring REST, Spring Web MVC) |
-| **Persistence** | Spring Data JDBC |
-| **Database** | MySQL |
-| **Security** | Spring Security (HTTP Basic Auth, BCrypt) |
-| **Caching** | Spring Cache Abstraction (`ConcurrentMapCacheManager`) |
-| **Validation** | Jakarta Bean Validation + Custom Constraints |
-| **Serialization** | Jackson (`ObjectMapper`) |
-| **Boilerplate Reduction** | Lombok |
+| --- | --- |
+| Language & Runtime | Java 17+ / Java 25 |
+| Framework | Spring Boot 3.x / 4.x (Spring REST) |
+| Persistence | Spring Data JDBC |
+| Database | MySQL |
+| Security | Spring Security (BCrypt, HTTP Basic Auth) |
+| Caching | Spring Cache (`ConcurrentMapCacheManager`) |
+| Validation | Jakarta Bean Validation |
+| Utilities | Lombok, Jackson (`ObjectMapper`) |
 
 ---
 
-## 🛡️ Security & Role Access
+## Data Model & Domain Entities
 
-Authentication is enforced via **HTTP Basic Authentication**. Endpoints are secured based on user roles:
-
-* **`ROLE_ADMIN`:** Full management of catalog resources (`/api/pie/**`).
-* **`ROLE_USER`:** Access to delivery areas (`/api/area/**`).
-* **Public:** General queries, order placements, and authentication routes.
+* `User` (`user`): System credentials, personal details, verification status, and transient roles.
+* `Role` (`role`): User roles (`USER`, `ADMIN`).
+* `Pie` (`pie`): Product catalog item mapped with `@MappedCollection` for awards and `@Transient` ingredient strings.
+* `Ingredient` (`ingredient`): Ingredients associated with pies through `pie_ingredient`.
+* `Award` (`award`): Pie awards mapped via `@MappedCollection(idColumn = "pie_id")`.
+* `Area` (`area`): Supported delivery regions.
+* `Order` (`order`): Customer orders containing transient `area` and `orderItems`.
+* `OrderItem` (`order_item`): Order line items associating pie names and quantities.
 
 ---
 
-## 📡 REST API Endpoint Reference
+## Security & Authentication
+
+Security is configured via Spring Security using HTTP Basic Authentication (`httpBasic`).
+
+### Access Rules
+
+* `ROLE_ADMIN`: Access to pie catalog management (`/api/pie/**`).
+* `ROLE_USER`: Access to delivery area endpoints (`/api/area/**`).
+* Public (`permitAll()`): Public product catalog browsing, registration, and general routes.
+
+```java
+@Bean
+@Primary
+protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    http
+        .authorizeHttpRequests(authorize -> authorize
+            .requestMatchers("/api/pie/**").hasAuthority("ROLE_ADMIN")
+            .requestMatchers("/api/area/**").hasAuthority("ROLE_USER")
+            .anyRequest().permitAll()
+        )
+        .httpBasic(Customizer.withDefaults());
+    return http.build();
+}
+
+```
+
+---
+
+## API Endpoints
 
 ### 1. Delivery Areas (`/api/area`)
 
-| Method | Endpoint | Authority | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/area/{id}` | Public | Fetch delivery area by ID |
-| `GET` | `/api/areas` | `ROLE_USER` | Fetch all available delivery areas |
-| `POST` | `/api/areas` | `ROLE_USER` | Create a new delivery area |
-| `PUT` | `/api/area/{id}` | `ROLE_USER` | Fully update a delivery area |
-| `PATCH` | `/api/area/{id}` | `ROLE_USER` | Partially update a delivery area |
-| `DELETE` | `/api/area/{id}` | `ROLE_USER` | Delete a delivery area |
+| Method | Path | Auth / Role | Description |
+| --- | --- | --- | --- |
+| GET | `/api/area/{id}` | Public | Get delivery area by ID |
+| GET | `/api/areas` | `ROLE_USER` | List all delivery areas |
+| POST | `/api/areas` | `ROLE_USER` | Create new delivery area |
+| PUT | `/api/area/{id}` | `ROLE_USER` | Full update of delivery area |
+| PATCH | `/api/area/{id}` | `ROLE_USER` | Partial update of delivery area |
+| DELETE | `/api/area/{id}` | `ROLE_USER` | Delete delivery area |
 
 ---
 
-### 2. Pies Catalog (`/api/pie`)
+### 2. Pie Catalog (`/api/pie`)
 
-| Method | Endpoint | Authority | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/pie/{id}` | Public | Get pie details (ingredients, awards) |
-| `GET` | `/api/pies` | Public | List all pies |
-| `GET` | `/api/pies?page=0&size=5` | Public | Paginated pie results |
-| `GET` | `/api/pies?sortBy=price&sortOrder=asc` | Public | Sorted pie results |
-| `GET` | `/api/pies?page=0&size=5&sortBy=name&sortOrder=desc` | Public | Paginated and sorted pie results |
-| `POST` | `/api/pies` | `ROLE_ADMIN` | Add a new pie to catalog |
-| `PUT` | `/api/pie/{id}` | `ROLE_ADMIN` | Fully replace an existing pie |
-| `PATCH` | `/api/pie/{id}` | `ROLE_ADMIN` | Partially update pie attributes |
-| `DELETE` | `/api/pie/{id}` | `ROLE_ADMIN` | Remove a pie from catalog |
+| Method | Path | Auth / Role | Description |
+| --- | --- | --- | --- |
+| GET | `/api/pie/{id}` | Public | Get pie by ID |
+| GET | `/api/pies` | Public | List all pies |
+| GET | `/api/pies?page=0&size=5` | Public | Paginated pie list |
+| GET | `/api/pies?sortBy=price&sortOrder=asc` | Public | Sorted pie list |
+| GET | `/api/pies?page=0&size=5&sortBy=name&sortOrder=desc` | Public | Paginated and sorted pie list |
+| POST | `/api/pies` | `ROLE_ADMIN` | Create new pie |
+| PUT | `/api/pie/{id}` | `ROLE_ADMIN` | Full update of pie |
+| PATCH | `/api/pie/{id}` | `ROLE_ADMIN` | Partial update of pie |
+| DELETE | `/api/pie/{id}` | `ROLE_ADMIN` | Delete pie |
 
 ---
 
 ### 3. Orders (`/api/order`)
 
-| Method | Endpoint | Authority | Description |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/order/{id}` | Public / Auth | Retrieve order details by ID |
-| `GET` | `/api/orders` | Public / Auth | Fetch all orders |
-| `GET` | `/api/orders?page=0&size=10&sortBy=stamp&sortOrder=desc` | Public / Auth | Paginated & sorted orders |
-| `POST` | `/api/orders` | Public / Auth | Submit a new order |
-| `PUT` | `/api/order/{id}` | Public / Auth | Full update of an existing order |
-| `PATCH` | `/api/order/{id}` | Public / Auth | Partial update of an order |
-| `DELETE` | `/api/order/{id}` | Public / Auth | Cancel/Delete an order record |
+| Method | Path | Auth / Role | Description |
+| --- | --- | --- | --- |
+| GET | `/api/order/{id}` | Public / Auth | Get order by ID |
+| GET | `/api/orders` | Public / Auth | List all orders |
+| GET | `/api/orders?page=0&size=10&sortBy=stamp&sortOrder=desc` | Public / Auth | Paginated and sorted orders |
+| POST | `/api/orders` | Public / Auth | Submit new order |
+| PUT | `/api/order/{id}` | Public / Auth | Full update of order |
+| PATCH | `/api/order/{id}` | Public / Auth | Partial update of order |
+| DELETE | `/api/order/{id}` | Public / Auth | Delete order |
 
 ---
 
-### 4. Cache Management
+### 4. System Cache (`/api/cache-data`)
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/cache-data/{name}` | Inspect active memory entries for a specific cache region (e.g., `cache`, `pie-cache`) |
+| Method | Path | Auth / Role | Description |
+| --- | --- | --- | --- |
+| GET | `/api/cache-data/{name}` | Public / Auth | Inspect active cache entries for a region |
 
 ---
 
-## ⚡ Error Handling Format
+## Update Mechanics (PUT vs PATCH)
 
-Errors are returned in a unified JSON structure managed by `@ControllerAdvice`:
+* PUT Requests: Full entity replacement. Expects a complete valid JSON object bound to `@Valid @RequestBody`. Missing fields trigger validation or database constraints.
+* PATCH Requests: Partial entity updates. Payload is accepted as `Map<String, Object>`, enabling explicit distinction between omitted properties and null values. Updated fields are merged into the target entity and validated programmatically via `BeanPropertyBindingResult` before persistence.
+
+---
+
+## Global Error Handling
+
+All uncaught REST exceptions are handled globally by `GlobalExceptionHandler`.
+
+### JSON Error Response
 
 ```json
 {
     "timestamp": "2026-10-10T18:00:00.000+00:00",
     "status": 400,
-    "error": "Bad Request / Validation Error Message",
+    "error": "Validation error message",
     "path": "uri=/api/orders"
 }
+
 ```
 
----
+### HTTP Response Status Codes
 
-## ⚙️ How to Run
-
-1. **Database Setup:**
-   Ensure MySQL is running and execute your schema initialization script.
-   
-2. **Properties Configuration:**
-   Update `src/main/resources/application.properties`:
-   ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/pitos?useSSL=false&serverTimezone=UTC
-   spring.datasource.username=YOUR_USER
-   spring.datasource.password=YOUR_PASSWORD
-   ```
-
-3. **Build & Run:**
-   ```bash
-   mvn clean install
-   mvn spring-boot:run
-   ```
+* `200 OK`: Successful retrieval, update, or deletion.
+* `201 Created`: Successful resource creation.
+* `204 No Content`: Successful execution without return payload.
+* `400 Bad Request`: Validation failure or bad payload format.
+* `401 Unauthorized`: Missing or invalid Basic Auth credentials.
+* `404 Not Found`: Target resource does not exist.
+* `409 Conflict`: Attempted creation of duplicate resource.
+* `500 Internal Server Error`: Unhandled application exception.
 
 ---
 
-## 👤 Credits
+## Setup & Running
 
-Developed by **[Nikolaos Poulopoulos](https://github.com/nikwilldoit)**.
+### 1. Database Setup
+
+Create MySQL database: find the sql schema [here](https://github.com/nikwilldoit/PitosPies/blob/main/src/main/resources/db/DB_schema.sql)
+
+```sql
+CREATE DATABASE pitos;
+
+```
+
+Configure `src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/pitos?useSSL=false&serverTimezone=UTC
+spring.datasource.username=YOUR_DB_USER
+spring.datasource.password=YOUR_DB_PASSWORD
+
+```
+
+### 2. Build & Execute
+
+```bash
+mvn clean install
+mvn spring-boot:run
+
+```
+
+The REST API service runs locally at `http://localhost:8080/api`.
+
+---
+
+## Related Repositories
+
+* [PitosPies Web Application](https://github.com/nikwilldoit/PitosPies): Spring Boot Thymeleaf Web Application.
+
+---
+
+## Credits
+
+Developed by [Nikolaos Poulopoulos](https://github.com/nikwilldoit).
