@@ -13,7 +13,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -25,9 +24,6 @@ public class WebSecurityConfig {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(authService).passwordEncoder(passwordEncoder);
     }
@@ -36,15 +32,12 @@ public class WebSecurityConfig {
     @Primary
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf-> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/pie/**").hasAuthority("ROLE_ADMIN") //ta vlepei mono admin
                         .requestMatchers("/api/area/**").hasAuthority("ROLE_USER") //ta vlepei mono user
                         .anyRequest().permitAll()
                 )
-                //.httpBasic(Customizer.withDefaults()) //einai gia basic authentication
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement((session) -> session.disable())
+                .httpBasic(Customizer.withDefaults())
         ;
         return http.build();
     }
