@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
@@ -46,6 +48,15 @@ public class AreaRestController {
 
     @GetMapping("/areas")
     public ResponseEntity<List<Area>> handleRequest2() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Name: " + authentication.getName());
+        System.out.println("credentials: " + authentication.getCredentials());
+        System.out.println("authorities: " + authentication.getAuthorities());
+        System.out.println("principal: " + authentication.getPrincipal());
+        System.out.println("details: " + authentication.getDetails());
+
         List<Area> areas = areaService.getAllAreaEntities();
         return new ResponseEntity<>(areas, HttpStatus.OK);
     }
